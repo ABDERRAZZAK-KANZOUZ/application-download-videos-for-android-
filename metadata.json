@@ -1,0 +1,6 @@
+{
+  "name": "MediaHub",
+  "description": "A modern media download manager that allows users to manage and downlod media from sources that permit downloading.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
