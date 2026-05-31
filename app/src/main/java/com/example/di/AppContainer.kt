@@ -15,8 +15,9 @@ class AppContainer(private val context: Context) {
 
     val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .build()
     }
 

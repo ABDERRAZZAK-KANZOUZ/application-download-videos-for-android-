@@ -162,17 +162,29 @@ fun FileManagerScreen(
                                 }
                                 IconButton(
                                     onClick = {
-                                        val sendIntent = Intent().apply {
-                                            action = Intent.ACTION_SEND
-                                            putExtra(Intent.EXTRA_SUBJECT, "Shared Media asset from MediaHub")
-                                            putExtra(Intent.EXTRA_TEXT, "Completed media downloaded via MediaHub: ${file.name.substringBeforeLast(".")}\nSize: $fileLengthLabel\nFile Type: ${file.extension.uppercase()}")
-                                            type = "text/plain"
+                                        try {
+                                            val uri = androidx.core.content.FileProvider.getUriForFile(
+                                                context,
+                                                "${context.packageName}.provider",
+                                                file
+                                             )
+                                             val sendIntent = Intent().apply {
+                                                 action = Intent.ACTION_SEND
+                                                 putExtra(Intent.EXTRA_STREAM, uri)
+                                                 type = if (isVideo) "video/mp4" else "audio/mpeg"
+                                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                             }
+                                             val shareIntent = Intent.createChooser(sendIntent, "Share Media File")
+                                             context.startActivity(shareIntent)
+                                        } catch (e: Exception) {
+                                             android.widget.Toast.makeText(context, "Error sharing: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
                                         }
-                                        val shareIntent = Intent.createChooser(sendIntent, "Share Media Info")
-                                        context.startActivity(shareIntent)
                                     }
                                 ) {
                                     Icon(Icons.Filled.Share, contentDescription = "Share file intent trigger", tint = MaterialTheme.colorScheme.secondary)
+                                }
+                                IconButton(onClick = { viewModel.exportToPublicDownloads(file) }) {
+                                    Icon(Icons.Filled.SaveAlt, contentDescription = "Save to Public Memory Downloads Folder", tint = MaterialTheme.colorScheme.secondary)
                                 }
                                 IconButton(onClick = { viewModel.deleteFile(file) }) {
                                     Icon(Icons.Filled.Delete, contentDescription = "Delete physical item path", tint = MaterialTheme.colorScheme.error)

@@ -33,6 +33,39 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settings by viewModel.settingsState.collectAsState()
             
+            // Storage and Media Permissions Handler
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+            ) { permissions ->
+                val allGranted = permissions.all { it.value }
+                if (allGranted) {
+                    android.widget.Toast.makeText(context, "Permissions granted! Ready to save to device downloads.", android.widget.Toast.LENGTH_SHORT).show()
+                } else {
+                    android.widget.Toast.makeText(context, "Storage permissions omitted. Standard downloads will still function via backup.", android.widget.Toast.LENGTH_LONG).show()
+                }
+            }
+
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                val permissionsToRequest = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    arrayOf(
+                        android.Manifest.permission.READ_MEDIA_AUDIO,
+                        android.Manifest.permission.READ_MEDIA_VIDEO,
+                        android.Manifest.permission.POST_NOTIFICATIONS
+                    )
+                } else {
+                    arrayOf(
+                        android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    )
+                }
+                try {
+                    permissionLauncher.launch(permissionsToRequest)
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "Failed launching permissions request", e)
+                }
+            }
+
             MyApplicationTheme(darkTheme = settings.darkMode) {
                 val screen by viewModel.currentScreen.collectAsState()
 

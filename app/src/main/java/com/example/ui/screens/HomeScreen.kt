@@ -48,9 +48,13 @@ fun HomeScreen(
     var showPasteSuggestion by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        val clipText = clipboardManager.getText()?.text ?: ""
-        if (clipText.startsWith("http://") || clipText.startsWith("https://")) {
-            showPasteSuggestion = true
+        try {
+            val clipText = clipboardManager.getText()?.text ?: ""
+            if (clipText.startsWith("http://") || clipText.startsWith("https://")) {
+                showPasteSuggestion = true
+            }
+        } catch (e: Exception) {
+            // Absorb clipboard denial safely when app is not in focus at startup
         }
     }
 
@@ -226,10 +230,14 @@ fun HomeScreen(
                                 .fillMaxWidth()
                                 .padding(vertical = 10.dp)
                                 .clickable {
-                                    val clipText = clipboardManager.getText()?.text ?: ""
-                                    if (clipText.isNotBlank()) {
-                                        urlInput = clipText
-                                        showPasteSuggestion = false
+                                    try {
+                                        val clipText = clipboardManager.getText()?.text ?: ""
+                                        if (clipText.isNotBlank()) {
+                                            urlInput = clipText
+                                            showPasteSuggestion = false
+                                        }
+                                    } catch (e: Exception) {
+                                        // Absorb clipboard permission/focus issues gracefully
                                     }
                                 }
                                 .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp))
@@ -261,6 +269,93 @@ fun HomeScreen(
                             Icon(Icons.Outlined.Search, contentDescription = "Analyze")
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Analyze URL", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "✨ SINGLE-TAP TEST LIBRARY",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        letterSpacing = 1.25.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Don't have a video link handy? Tap any high-speed public stream below to test downloading and playback instantly.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    val testStreams = listOf(
+                        Triple("📽️ Epic Fire Flame Video (1.7MB)", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", "High-Speed Small MP4 Stream"),
+                        Triple("📽️ Toy Escape Film (2.3MB)", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", "Highly compressed 2.3MB movie stream"),
+                        Triple("📽️ Animation Fun Clip (1.1MB)", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "Instant download 1.1MB video test"),
+                        Triple("🎵 SoundHelix Synth Beat (6.1MB)", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", "Dynamic High-Quality Audio Track")
+                    )
+
+                    testStreams.forEachIndexed { index, (title, url, description) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    urlInput = url
+                                    viewModel.resolveUrl(url)
+                                }
+                                .padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (url.endsWith(".mp3")) Icons.Filled.MusicNote else Icons.Filled.PlayCircleFilled,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = description,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Filled.ArrowForward,
+                                contentDescription = "Load Link",
+                                tint = MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        if (index < testStreams.lastIndex) {
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
                         }
                     }
                 }

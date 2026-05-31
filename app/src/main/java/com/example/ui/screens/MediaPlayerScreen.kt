@@ -103,7 +103,20 @@ fun MediaPlayerScreen(
                     .clip(RoundedCornerShape(8.dp)),
                 factory = { context ->
                     VideoView(context).apply {
-                        setVideoPath(activeFile.absolutePath)
+                        try {
+                            setVideoPath(activeFile.absolutePath)
+                        } catch (e: Exception) {
+                            try {
+                                val uri = androidx.core.content.FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.provider",
+                                    activeFile
+                                )
+                                setVideoURI(uri)
+                            } catch (e2: Exception) {
+                                // Final fallback
+                            }
+                        }
                         setOnPreparedListener { mp ->
                             mp.isLooping = true
                             mediaPlayerRef = mp

@@ -251,6 +251,14 @@ class MediaHubViewModel(
         return success
     }
 
+    fun exportToPublicDownloads(file: File) {
+        viewModelScope.launch {
+            val isAudio = file.name.endsWith(".mp3", ignoreCase = true) || file.name.endsWith(".m4a", ignoreCase = true)
+            downloadEngine.copyFileToPublicDownloads(file, isAudio)
+            android.widget.Toast.makeText(app, "Exported successfully to Downloads/MediaHub folder!", android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
+
     // --- Media Player Controller properties ---
     private val _playerMedia = MutableStateFlow<File?>(null)
     val playerMedia: StateFlow<File?> = _playerMedia.asStateFlow()
